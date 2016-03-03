@@ -4,10 +4,18 @@ var mysql = require('mysql');
 var express = require('express');
 var app = express();
 
+var password;
+try {
+    password = fs.readFileSync('/home/ec2-user/mysqlcreds', 'utf8').replace(/\n$/, '')
+}catch(e) {
+    // file does not exist
+    password = 'root';
+}
+
 var connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: password,
     database: 'influencers',
     port: 3307
 });
