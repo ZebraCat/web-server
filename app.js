@@ -17,7 +17,7 @@ var connection = mysql.createConnection({
     user: 'root',
     password: password,
     database: 'influencers',
-    port: 3307
+    port: 3306
 });
 
 app.get('/', function(req, res) {
@@ -28,10 +28,6 @@ app.get('/', function(req, res) {
             console.log(err);
         }
     });
-});
-
-app.get('/influeners/:handle', function(req, res) {
-
 });
 
 app.listen(3000);
