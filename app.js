@@ -2,9 +2,14 @@ var http = require('http');
 var fs = require('fs');
 var mysql = require('mysql');
 var express = require('express');
-var logger = require('winston');
 var app = express();
-logger.add(logger.transports.File, { filename: '/home/ec2-user/web-server.log' });
+var log_file = fs.createWriteStream('/home/ec2-user/web-server.log', {flags : 'w'});
+var log_stdout = process.stdout;
+
+console.log = function(d) {
+    log_file.write(util.format(d) + '\n');
+    log_stdout.write(util.format(d) + '\n');
+};
 
 
 
@@ -41,7 +46,7 @@ app.get('/', function(req, res) {
         if(!err) {
             res.send(rows);
         }else {
-            logger.log('ERROR', err);
+            console.log(err);
         }
     });
 });
@@ -54,21 +59,21 @@ app.post('/insert', function(req, res) {
                 if(!err) {
                     if(rows.length > 0) {
                         res.send('<div><label>Influencer Already Exists in DB!</label></div>');
-                        logger.log('INFO', 'Influencer: ' + influencer.username + ' Already Exists in DB!')
+                        console.log('Influencer: ' + influencer.username + ' Already Exists in DB!')
                     }else {
                         //insert
                         connection.query('INSERT INTO influencers SET ?', influencer, function(err, result) {
                             if(err) {
                                 res.send('<div><label>Could not insert influencer to Database! Try again</label></div>');
-                                logger.log('ERROR', 'Could not insert influencer: '+influencer.username + ' to Database! Try again');
+                                console.log('Could not insert influencer: '+influencer.username + ' to Database! Try again');
                             }else {
                                 res.send('<div><label>Influencer Inserted Successfuly!</label></div>');
-                                logger.log('INFO', 'Influencer:' + influencer.username + 'Inserted Successfuly!');
+                                console.log('Influencer:' + influencer.username + 'Inserted Successfuly!');
                             }
                         })
                     }
                 }else {
-                    logger.log('ERROR', err);
+                    console.log(err);
                 }
             })
         }
