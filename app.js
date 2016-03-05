@@ -55,7 +55,7 @@ app.post('/insert', function(req, res) {
     var influencer = req.body;
     if(influencer && influencer.hasOwnProperty('username') && influencer.username) {
         try {
-            connection.query('SELECT 1 FROM influencers WHERE username = "' + influencer.username + '" ORDER BY username LIMIT 1', function(err, rows, fields) {
+            connection.query('SELECT 1 FROM influencers_manual WHERE username = "' + influencer.username + '" ORDER BY username LIMIT 1', function(err, rows, fields) {
                 if(!err) {
                     if(rows.length > 0) {
                         res.send('<div><label>Influencer Already Exists in DB!</label></div>');
@@ -65,7 +65,7 @@ app.post('/insert', function(req, res) {
                             logger.log('WARNING', 'bad influencer year of birth: ' + influencer.year_of_birth);
                             res.send('<div><label>Bad influencer year of birth! (only year needed, ex: 1989)</label></div>');
                         }
-                        connection.query('INSERT INTO influencers SET ?', influencer, function(err, result) {
+                        connection.query('INSERT INTO influencers_manual SET ?', influencer, function(err, result) {
                             if(err) {
                                 res.send('<div><label>Could not insert influencer to Database! Try again</label></div>');
                                 logger.log('ERROR', 'Could not insert influencer: '+influencer.username + ' to Database! Try again');
