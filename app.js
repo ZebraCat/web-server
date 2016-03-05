@@ -4,6 +4,12 @@ var mysql = require('mysql');
 var express = require('express');
 var app = express();
 
+var bodyParser = require('body-parser');
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+    extended: true
+}));
+
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -34,6 +40,35 @@ app.get('/', function(req, res) {
             console.log(err);
         }
     });
+});
+
+app.post('/insert', function(req, res) {
+    var influencer = req.body;
+    if(influencer) {
+        if(influencer.hasOwnProperty('username') && influencer.username) {
+            connection.query('"SELECT 1 FROM influencers WHERE user = "' + influencer.username + '" ORDER BY user LIMIT 1', function(err, rows, fields) {
+                if(!err) {
+                    if(rows.length > 0) {
+                        res.send('<div><label>Influencer Already Exists in DB!</label></div>');
+                        console.log('Influencer Already Exists in DB!')
+                    }else {
+                        //insert
+                        connection.query('INSERT INTO influencers SET ?', influencer, function(err, result) {
+                            if(err) {
+                                res.send('<div><label>Could not insert influencer to Database! Try again</label></div>');
+                                console.log('Could not insert influencer to Database! Try again');
+                            }else {
+                                res.send('<div><label>Influencer Inserted Successfuly!</label></div>');
+                                console.log('Influencer Inserted Successfuly!');
+                            }
+                        })
+                    }
+                }else {
+                    console.log(err);
+                }
+            })
+        }
+    }
 });
 
 app.listen(3000);
