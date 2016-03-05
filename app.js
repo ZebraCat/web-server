@@ -1,6 +1,5 @@
 var http = require('http');
 var fs = require('fs');
-var util = require('util');
 var mysql = require('mysql');
 var express = require('express');
 var app = express();
