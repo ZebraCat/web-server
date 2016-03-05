@@ -46,21 +46,25 @@ app.get('/', function(req, res) {
             res.send(rows);
         }else {
             logger.log('ERROR', err);
+            res.status(500).send('Could not connect to database!');
         }
     });
 });
 
 app.post('/insert', function(req, res) {
     var influencer = req.body;
-    if(influencer) {
-        if(influencer.hasOwnProperty('username') && influencer.username) {
-            connection.query('"SELECT 1 FROM influencers WHERE user = "' + influencer.username + '" ORDER BY user LIMIT 1', function(err, rows, fields) {
+    if(influencer && influencer.hasOwnProperty('username') && influencer.username) {
+        try {
+            connection.query('SELECT 1 FROM influencers WHERE username = "' + influencer.username + '" ORDER BY username LIMIT 1', function(err, rows, fields) {
                 if(!err) {
                     if(rows.length > 0) {
                         res.send('<div><label>Influencer Already Exists in DB!</label></div>');
                         logger.log('INFO', 'Influencer: ' + influencer.username + ' Already Exists in DB!')
                     }else {
-                        //insert
+                        if(influencer.hasOwnProperty('year_of_birth') && influencer.year_of_birth && influencer.year_of_birth < 1950) {
+                            logger.log('WARNING', 'bad influencer year of birth: ' + influencer.year_of_birth);
+                            res.send('<div><label>Bad influencer year of birth! (only year needed, ex: 1989)</label></div>');
+                        }
                         connection.query('INSERT INTO influencers SET ?', influencer, function(err, result) {
                             if(err) {
                                 res.send('<div><label>Could not insert influencer to Database! Try again</label></div>');
@@ -73,9 +77,17 @@ app.post('/insert', function(req, res) {
                     }
                 }else {
                     logger.log('ERROR', err);
+                    res.status(500).send('<div><label>Could not connect to database!</label></div>');
                 }
             })
         }
+        catch(e) {
+            logger.log('ERROR', e);
+            res.status(500).send('<div><label>Something went wrong in mysql, try again!</label></div>');
+        }
+    }else {
+        logger.log('WARN', 'Did not recieve influencer name');
+        res.send('<div><label>No Influencer Name!</label></div>');
     }
 });
 
