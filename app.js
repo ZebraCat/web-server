@@ -2,10 +2,14 @@ var http = require('http');
 var fs = require('fs');
 var mysql = require('mysql');
 var express = require('express');
-var logger = require('winston');
+var winston = require('winston');
+var logger = new(winston.Logger)({
+    transports: [
+        new(winston.transports.Console)(),
+        new(winston.transports.File)({filename: '/home/ec2-user/web-server.log'})
+    ]
+});
 var app = express();
-logger.add(logger.transports.File, { filename: '/home/ec2-user/web-server.log' });
-
 
 
 var bodyParser = require('body-parser');
