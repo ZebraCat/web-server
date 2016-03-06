@@ -67,10 +67,10 @@ app.post('/insert', function(req, res) {
                         }
                         connection.query('INSERT INTO influencers_manual SET ?', influencer, function(err, result) {
                             if(err) {
-                                res.send('<div><label>Could not insert influencer to Database! Try again</label></div>');
+                                res.send('<div><label>Could not insert influencer ' + influencer.username + 'to Database! Try again</label></div>');
                                 logger.log('ERROR', 'Could not insert influencer: '+influencer.username + ' to Database! Try again');
                             }else {
-                                res.send('<div><label>Influencer Inserted Successfuly!</label></div>');
+                                res.send('<div><label>Influencer ' + influencer.username + ' Inserted Successfuly!</label></div>');
                                 logger.log('INFO', 'Influencer:' + influencer.username + 'Inserted Successfuly!');
                             }
                         })
