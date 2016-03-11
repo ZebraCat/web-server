@@ -48,7 +48,7 @@ function makeQueryString(userQuery) {
         queryString += queryStringIfExists(userQuery, 'a', 'avg_comments', '>', 'commentsAbove');
         queryString += queryStringIfExists(userQuery, 'a', 'avg_likes', '>', 'likesAbove');
         queryString += queryStringIfExists(userQuery, 'b', 'year_of_birth', '>=', 'toAge', function(year) {return (currentYear - parseInt(year)).toString()});
-        queryString += queryStringIfExists(userQuery, 'b', 'year_of_birth', '<=','fromAge', function(year) {return (currentYear - parseInt(year)).toString()});
+        queryString += queryStringIfExists(userQuery, 'b', 'year_of_birth', '<=', 'fromAge', function(year) {return (currentYear - parseInt(year)).toString()});
     }
     return queryString;
 }
@@ -67,23 +67,17 @@ app.get('/', function(req, res) {
     // join tables
     try {
         var queryString = makeQueryString(userQuery);
-        if(queryString) {
-            connection.query('SELECT * FROM influencers as a, influencers_manual as b WHERE a.username = b.username ' + queryString + ';',
-                function(err, rows, fields) {
+        connection.query('SELECT * FROM influencers as a, influencers_manual as b WHERE a.username = b.username ' + queryString + ';',
+            function (err, rows, fields) {
 
-                    if(!err) {
-                        res.send(rows);
-                    }else {
-                        logger.log('ERROR', err);
-                        res.status(500).send('Could not connect to database!');
-                    }
-                });
-        }
-        else {
-            logger.log('ERROR', 'Empty Query String!');
-        }
-    }
-    catch(e) {
+                if (!err) {
+                    res.send(rows);
+                } else {
+                    logger.log('ERROR', err);
+                    res.status(500).send('Could not connect to database!');
+                }
+            });
+    } catch(e) {
         logger.log('ERROR', e);
         console.log('ERROR' + e.toString());
     }
