@@ -41,7 +41,16 @@ var connection = mysql.createConnection({
 });
 
 app.get('/', function(req, res) {
-    connection.query('SELECT * from influencers', function(err, rows, fields) {
+    var userQuery = req.query;
+    // get the year
+    var currentYear = new Date().getFullYear();
+    // join tables
+    connection.query('SELECT * FROM influencers as a, influencers_manual as b WHERE a.username = b.username AND ' +
+        'b.year_of_birth < ? AND b.year_of_birth > ? AND a.followers > ? AND a.avg_comments > ? AND a.avg_likes > ?',
+        [currentYear - parseInt(userQuery['fromAge']), parseInt(currentYear - userQuery['toAge']), userQuery['followersAbove'],
+        userQuery['commentsAbove'], userQuery['likesAbove']],
+        function(err, rows, fields) {
+
         if(!err) {
             res.send(rows);
         }else {
