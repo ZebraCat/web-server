@@ -56,7 +56,7 @@ function makeQueryString(userQuery) {
 function queryStringIfExists(userQuery, tableName, tableField, sign ,field, transFunction) {
 
     transFunction = transFunction || function(x) {return x};
-    if (typeof userQuery[field] != 'undefined' && !isNaN(userQuery[field])) {
+    if (typeof userQuery[field] !== 'undefined' && userQuery[field] && !isNaN(userQuery[field])) {
         return ' AND ' + tableName + '.' + tableField + sign + transFunction(userQuery[field]);
     }
     return '';
