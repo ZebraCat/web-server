@@ -40,24 +40,53 @@ var connection = mysql.createConnection({
     port: 3306
 });
 
+function makeQueryString(userQuery) {
+    var queryString = "";
+    if (typeof userQuery !== 'undefined') {
+        var currentYear = new Date().getFullYear();
+        queryString += queryStringIfExists(userQuery, 'a', 'followers', '>', 'followersAbove');
+        queryString += queryStringIfExists(userQuery, 'a', 'avg_comments', '>', 'commentsAbove');
+        queryString += queryStringIfExists(userQuery, 'a', 'avg_likes', '>', 'likesAbove');
+        queryString += queryStringIfExists(userQuery, 'b', 'year_of_birth', '>=', 'toAge', function(year) {return (currentYear - parseInt(year)).toString()});
+        queryString += queryStringIfExists(userQuery, 'b', 'year_of_birth', '<=','fromAge', function(year) {return (currentYear - parseInt(year)).toString()});
+    }
+    return queryString;
+}
+
+function queryStringIfExists(userQuery, tableName, tableField, sign ,field, transFunction) {
+
+    transFunction = transFunction || function(x) {return x};
+    if (typeof userQuery[field] != 'undefined' && !isNaN(userQuery[field])) {
+        return ' AND ' + tableName + '.' + tableField + sign + transFunction(userQuery[field]);
+    }
+    return '';
+}
+
 app.get('/', function(req, res) {
     var userQuery = req.query;
-    // get the year
-    var currentYear = new Date().getFullYear();
     // join tables
-    connection.query('SELECT * FROM influencers as a, influencers_manual as b WHERE a.username = b.username AND ' +
-        'b.year_of_birth < ? AND b.year_of_birth > ? AND a.followers > ? AND a.avg_comments > ? AND a.avg_likes > ?',
-        [currentYear - parseInt(userQuery['fromAge']), parseInt(currentYear - userQuery['toAge']), userQuery['followersAbove'],
-        userQuery['commentsAbove'], userQuery['likesAbove']],
-        function(err, rows, fields) {
+    try {
+        var queryString = makeQueryString(userQuery);
+        if(queryString) {
+            connection.query('SELECT * FROM influencers as a, influencers_manual as b WHERE a.username = b.username ' + queryString + ';',
+                function(err, rows, fields) {
 
-        if(!err) {
-            res.send(rows);
-        }else {
-            logger.log('ERROR', err);
-            res.status(500).send('Could not connect to database!');
+                    if(!err) {
+                        res.send(rows);
+                    }else {
+                        logger.log('ERROR', err);
+                        res.status(500).send('Could not connect to database!');
+                    }
+                });
         }
-    });
+        else {
+            logger.log('ERROR', 'Empty Query String!');
+        }
+    }
+    catch(e) {
+        logger.log('ERROR', e);
+        console.log('ERROR' + e.toString());
+    }
 });
 
 app.post('/insert', function(req, res) {
