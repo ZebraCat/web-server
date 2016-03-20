@@ -123,4 +123,26 @@ app.post('/insert', function(req, res) {
     }
 });
 
+app.post('/report', function(req, res) {
+    var influencers = req.body;
+    if (influencers && influencers.hasOwnProperty('handles') && influencers.handles.length > 0) {
+        try {
+            var handles = influencers.handles;
+            var handlesString = handles.map(function(handle) {
+                return "'" + handle + "'";
+            }).join(',');
+            connection.query('SELECT * FROM influencers WHERE username IN (' + handlesString + ')', function(err, rows, fields) {
+                if (!err) {
+                    res.send(rows);
+                }else {
+                    res.status(500).send('<div><label>Could not find any influencer in the DB!</label></div>');
+                }
+            })
+        }catch(e) {
+            logger.log('ERROR', e);
+            res.status(500).send('<div><label>Could not get influencers from db</label></div>');
+        }
+    }
+});
+
 app.listen(3000);
