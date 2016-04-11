@@ -10,7 +10,7 @@ var logger = new(winston.Logger)({
     ]
 });
 var app = express();
-
+var PAGE_SIZE = 20;
 
 var bodyParser = require('body-parser');
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -65,21 +65,31 @@ function queryStringIfExists(userQuery, tableName, tableField, sign ,field, tran
 app.get('/', function(req, res) {
     var userQuery = req.query;
     // join tables
-    try {
-        var queryString = makeQueryString(userQuery);
-        connection.query('SELECT * FROM influencers as a, influencers_manual as b WHERE a.username = b.username ' + queryString + ';',
-            function (err, rows, fields) {
+    var pageNum = parseInt(userQuery['pageNum']);
+    if (typeof pageNum === 'undefined' || isNaN(pageNum)){
+        res.status(500).send('no page num specified!');
+        logger.log('page num was sent undefined, request: ' + req.toString());
+    }else {
+        try {
+            var queryString = makeQueryString(userQuery);
+            var limitString =' LIMIT ' + ((pageNum - 1) * PAGE_SIZE).toString() + ',' + (PAGE_SIZE).toString();
 
-                if (!err) {
-                    res.send(rows);
-                } else {
-                    logger.log('ERROR', err);
-                    res.status(500).send('Could not connect to database!');
-                }
-            });
-    } catch(e) {
-        logger.log('ERROR', e);
-        console.log('ERROR' + e.toString());
+            connection.query('SELECT * FROM influencers as a WHERE true' + queryString + limitString + ';',
+                function (err, rows, fields) {
+
+                    if (!err) {
+                        res.send(rows);
+                    } else {
+                        logger.log('ERROR', err);
+                        console.log('ERROR', err);
+                        res.status(500).send('Could not connect to database!');
+                    }
+                });
+        } catch(e) {
+            logger.log('ERROR', e);
+            console.log('ERROR' + e.toString());
+            res.status(500).send('Could not connect to database!');
+        }
     }
 });
 
