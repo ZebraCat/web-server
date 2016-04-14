@@ -79,7 +79,7 @@ app.get('/', function(req, res) {
             var limitString =' LIMIT ' + ((pageNum - 1) * PAGE_SIZE).toString() + ',' + (PAGE_SIZE).toString();
             var tableString = 'SELECT * FROM influencers as a ';
             if (containsField(userQuery, 'toAge') || containsField(userQuery, 'fromAge')) {
-                tableString += 'influencers_manual as b WHERE true AND a.username = b.username';
+                tableString += ',influencers_manual as b WHERE true AND a.username = b.username';
             }else {
                 tableString += 'WHERE true';
             }
