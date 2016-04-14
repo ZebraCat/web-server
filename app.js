@@ -56,10 +56,14 @@ function makeQueryString(userQuery) {
 function queryStringIfExists(userQuery, tableName, tableField, sign ,field, transFunction) {
 
     transFunction = transFunction || function(x) {return x};
-    if (typeof userQuery[field] !== 'undefined' && userQuery[field] && !isNaN(userQuery[field])) {
+    if (containsField(userQuery, field)) {
         return ' AND ' + tableName + '.' + tableField + sign + transFunction(userQuery[field]);
     }
     return '';
+}
+
+function containsField(userQuery, field) {
+    return typeof userQuery[field] !== 'undefined' && userQuery[field] && !isNaN(userQuery[field]);
 }
 
 app.get('/', function(req, res) {
@@ -73,8 +77,14 @@ app.get('/', function(req, res) {
         try {
             var queryString = makeQueryString(userQuery);
             var limitString =' LIMIT ' + ((pageNum - 1) * PAGE_SIZE).toString() + ',' + (PAGE_SIZE).toString();
+            var tableString = 'SELECT * FROM influencers as a ';
+            if (containsField(userQuery, 'toAge') || containsField(userQuery, 'fromAge')) {
+                tableString += 'influencers_manual as b WHERE true AND a.username = b.username';
+            }else {
+                tableString += 'WHERE true';
+            }
 
-            connection.query('SELECT * FROM influencers as a WHERE true' + queryString + limitString + ';',
+            connection.query(tableString + queryString + limitString + ';',
                 function (err, rows, fields) {
 
                     if (!err) {
