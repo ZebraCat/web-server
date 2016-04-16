@@ -70,7 +70,7 @@ app.post('/report', function(req, res) {
 });
 
 app.get('/get_campaigns', function(req, res) {
-
+    res.status(200).send('');
 });
 
 app.post('/set_new_campaign', function(req, res) {
