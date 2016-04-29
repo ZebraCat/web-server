@@ -3,7 +3,8 @@
 var http = require('http');
 var express = require('express');
 var winston = require('winston');
-var influencerManager = require('./influencer-mysql-manager');
+var influencerManager = require('./src/influencer-mysql-manager');
+var usersManager = require('./src/users-mysql-manager');
 
 var logger = new(winston.Logger)({
     transports: [
@@ -32,28 +33,12 @@ app.get('/', function(req, res) {
     if (typeof pageNum === 'undefined' || isNaN(pageNum)){
         res.status(500).send('no page num specified!');
         logger.log('page num was sent undefined, request: ' + req.toString());
-    }else {
+    } else {
         try {
             influencerManager.getInfluencers(userQuery, pageNum, res);
         } catch(e) {
-            connectionErrorResponse(res);
+            influencerManager.connectionErrorResponse(res, e);
         }
-    }
-});
-
-app.post('/insert', function(req, res) {
-    var influencer = req.body;
-    if(influencer && influencer.hasOwnProperty('username') && influencer.username) {
-        try {
-            influencerManager.insertInfluencer(influencer, res);
-        }
-        catch(e) {
-            logger.log('ERROR', e);
-            res.status(500).send('<div><label>Something went wrong in mysql, try again!</label></div>');
-        }
-    }else {
-        logger.log('WARN', 'Did not receive influencer name');
-        res.send('<div><label>No Influencer Name!</label></div>');
     }
 });
 
@@ -66,6 +51,8 @@ app.post('/report', function(req, res) {
             logger.log('ERROR', e);
             res.status(500).send('<div><label>Could not get influencers from db</label></div>');
         }
+    } else {
+        res.status(500).send('<div><label>Bad Request</label></div>');
     }
 });
 
@@ -74,7 +61,25 @@ app.get('/get_campaigns', function(req, res) {
 });
 
 app.post('/set_new_campaign', function(req, res) {
+    var campaignDetails = req.body;
+});
 
+app.post('/login', function(req, res) {
+    var user = req.body;
+    if (user && user.hasOwnProperty('username') && user.hasOwnProperty('password')) {
+        usersManager.login(user, res);
+    } else {
+        res.status(500).send('Bad Request');
+    }
+});
+
+app.post('/newUser', function(req, res) {
+    var user = req.body;
+    if (user && user.hasOwnProperty('username') && user.hasOwnProperty('password') && user.hasOwnProperty('email')) {
+        usersManager.insertNewUser(user, res);
+    } else {
+        res.status(500).send('Bad Request');
+    }
 });
 
 app.listen(3000);

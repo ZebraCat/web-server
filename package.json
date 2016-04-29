@@ -1,0 +1,8 @@
+{
+  "name": "application-name",
+  "version": "0.0.1",
+  "dependencies": {
+    "express-session": "^1.13.0",
+    "express-sessions": "^1.0.5"
+  }
+}
