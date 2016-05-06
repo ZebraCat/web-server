@@ -1,5 +1,5 @@
 {
-  "name": "application-name",
+  "name": "web-server",
   "version": "0.0.1",
   "dependencies": {
     "express-session": "^1.13.0",

@@ -9,7 +9,7 @@ var usersManager = require('./src/users-mysql-manager');
 var logger = new(winston.Logger)({
     transports: [
         new(winston.transports.Console)(),
-        new(winston.transports.File)({filename: '/home/ec2-user/web-server.log'})
+        new(winston.transports.File)({filename: '/home/omri/web-server.log'})
     ]
 });
 var app = express();

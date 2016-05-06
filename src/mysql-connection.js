@@ -6,7 +6,7 @@ var mysql = require('mysql');
 var password;
 
 try {
-    password = fs.readFileSync('/home/ec2-user/mysqlcreds', 'utf8').replace(/\n$/, '')
+    password = fs.readFileSync('/home/omri/mysqlcreds', 'utf8').replace(/\n$/, '')
 }catch(e) {
     // file does not exist
     password = 'root';
