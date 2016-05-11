@@ -13,6 +13,7 @@ InfluencerMysqlManager.makeQueryString = function(userQuery) {
         queryString += this.queryStringIfExists(userQuery, 'a', 'followers', '>', 'followersAbove');
         queryString += this.queryStringIfExists(userQuery, 'a', 'avg_comments', '>', 'commentsAbove');
         queryString += this.queryStringIfExists(userQuery, 'a', 'avg_likes', '>', 'likesAbove');
+        queryString += this.queryStringIfExists(userQuery, 'a', 'country', '=', 'country');
         queryString += this.queryStringIfExists(userQuery, 'b', 'year_of_birth', '>=', 'toAge', function(year) {return (currentYear - parseInt(year)).toString()});
         queryString += this.queryStringIfExists(userQuery, 'b', 'year_of_birth', '<=', 'fromAge', function(year) {return (currentYear - parseInt(year)).toString()});
     }
