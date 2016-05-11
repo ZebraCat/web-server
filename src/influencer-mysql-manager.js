@@ -43,21 +43,26 @@ InfluencerMysqlManager.getInfluencers = function (userQuery, pageNum, res) {
     }
 
     getConnection(function(err, connection) {
-        connection.query(tableString + queryString + limitString + ';',
-            function (err, rows, fields) {
-                if (!err) {
-                    res.send(rows);
-                } else {
-                    self.connectionErrorResponse(res, err);
-                }
-            });
+        if(!err) {
+            connection.query(tableString + queryString + limitString + ';',
+                function (err, rows, fields) {
+                    if (!err) {
+                        res.send(rows);
+                    } else {
+                        self.connectionErrorResponse(res, err);
+                    }
+                });
+        } else {
+            console.log("Error: " + err.toString());
+            self.connectionErrorResponse(res, err);
+        }
     });
 };
 
 InfluencerMysqlManager.getInfluencerReport = function(influencers, res) {
     var handles = influencers.handles;
     getConnection(function(err, connection) {
-        conection.query('SELECT * FROM influencers WHERE username IN ( ? )', [handles], function(err, rows, fields) {
+        connection.query('SELECT * FROM influencers WHERE username IN ( ? )', [handles], function(err, rows, fields) {
             if (!err) {
                 res.send(rows);
             }else {
