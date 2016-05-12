@@ -4,6 +4,7 @@ var http = require('http');
 var express = require('express');
 var winston = require('winston');
 var influencerManager = require('./src/influencer-mysql-manager');
+var influencerRedisManager = require('./src/influencer-redis-manager');
 var usersManager = require('./src/users-mysql-manager');
 
 var logger = new(winston.Logger)({
@@ -38,6 +39,20 @@ app.get('/', function(req, res) {
             influencerManager.getInfluencers(userQuery, pageNum, res);
         } catch(e) {
             influencerManager.connectionErrorResponse(res, e);
+        }
+    }
+});
+
+app.port('/delete', function(req, res) {
+    var influencer = req.body;
+    if (influencer && influencer.hasOwnProperty('username')) {
+        try {
+            influencerRedisManager.deleteInfluencer(influencer);
+            influencerManager.deleteInfluencer(influencer, res);
+
+        } catch(e) {
+            logger.error(e);
+            res.status(500).send("Could not connect to DB!");
         }
     }
 });

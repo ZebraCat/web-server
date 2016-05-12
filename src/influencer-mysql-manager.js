@@ -60,6 +60,19 @@ InfluencerMysqlManager.getInfluencers = function (userQuery, pageNum, res) {
     });
 };
 
+InfluencerMysqlManager.deleteInfluencer = function(influencer, res) {
+    var username = influencer.username;
+    getConnection(function(err, connection) {
+        connection.query("DELETE FROM influencers WHERE username=?",[username], function(err, result) {
+            if(!err) {
+                res.status(200).send('deleted influencer: ' + username + ' from db!');
+            } else {
+                res.status(500).send('Could not delete influencer: ' + username + ' from db!');
+            }
+        });
+    });
+};
+
 InfluencerMysqlManager.getInfluencerReport = function(influencers, res) {
     var handles = influencers.handles;
     getConnection(function(err, connection) {
