@@ -43,7 +43,7 @@ app.get('/', function(req, res) {
     }
 });
 
-app.port('/delete', function(req, res) {
+app.post('/delete', function(req, res) {
     var influencer = req.body;
     if (influencer && influencer.hasOwnProperty('username')) {
         try {
