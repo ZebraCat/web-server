@@ -29,7 +29,7 @@ InfluencerMysqlManager.queryStringIfExists = function(userQuery, tableName, tabl
 };
 
 InfluencerMysqlManager.containsField = function (userQuery, field) {
-    return typeof userQuery[field] !== 'undefined' && userQuery[field] && !isNaN(userQuery[field]);
+    return typeof userQuery[field] !== 'undefined' && userQuery[field];
 };
 
 InfluencerMysqlManager.getInfluencers = function (userQuery, pageNum, res) {
