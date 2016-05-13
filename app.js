@@ -4,7 +4,7 @@ var http = require('http');
 var express = require('express');
 var winston = require('winston');
 var influencerManager = require('./src/influencer-mysql-manager');
-//var influencerRedisManager = require('./src/influencer-redis-manager');
+var influencerRedisManager = require('./src/influencer-redis-manager');
 var usersManager = require('./src/users-mysql-manager');
 
 var logger = new(winston.Logger)({
