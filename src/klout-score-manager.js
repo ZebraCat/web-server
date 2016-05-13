@@ -27,7 +27,13 @@ KloutScoreManager.getKloutScore = function(user, rows, res, callback) {
             request(url, function (error, response, body) {
                 // insert klout score to mysql to cache request to klout
                 if (!error && response.statusCode == 200) {
-                    callback(JSON.parse(body)['score'], JSON.parse(kloutUser)['id'], myUser, res);
+                    var kloutResponse = JSON.parse(body);
+                    if (kloutResponse['unscored'] && kloutResponse['unscored'] == true) {
+                        console.log("Unscored");
+                        res.status(200).send(rows);
+                    } else {
+                        callback(kloutResponse['score'], JSON.parse(kloutUser)['id'], myUser, res);
+                    }
                 } else {
                     res.status(200).send(rows);
                 }
