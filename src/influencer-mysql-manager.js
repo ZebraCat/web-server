@@ -1,6 +1,7 @@
 'use strict';
 
 var getConnection = require('./mysql-connection');
+var KloutScoreManager = require('./klout-score-manager');
 var mysql = require('mysql');
 var PAGE_SIZE = 20;
 
@@ -73,16 +74,38 @@ InfluencerMysqlManager.deleteInfluencer = function(influencer, res) {
     });
 };
 
+// TODO - if score does not exist in db - get klout score of user, save to db and then return score.
+// TODO - if klout score does not exist, return influencer details and UI will calculate infashionista score
+// TODO - re-calculate score every week (different process, TBD)
 InfluencerMysqlManager.getInfluencerReport = function(influencers, res) {
     var handles = influencers.handles;
     getConnection(function(err, connection) {
+        if(err) {
+            console.log(err);
+        }
         connection.query('SELECT * FROM influencers WHERE username IN ( ? )', [handles], function(err, rows, fields) {
             if (!err) {
-                res.send(rows);
+                if (rows[0].klout_score) {
+                    res.send(rows)
+                } else {
+                    KloutScoreManager.getKloutScore(rows[0], rows, res, InfluencerMysqlManager.updateScore);
+                }
             }else {
                 res.status(500).send('<div><label>Could not find any influencer in the DB!</label></div>');
             }
         })
+    });
+};
+
+InfluencerMysqlManager.updateScore = function (klout_score, klout_id, influencer, res) {
+    getConnection(function(err, connection) {
+        connection.query('UPDATE influencers SET klout_score=?, klout_id=? WHERE user_id=?', [klout_score, klout_id, influencer.user_id], function(err, rows, fields) {
+            // TODO - pass influencer
+            if (err)
+                console.log(err);
+            influencer.handles = influencer.username;
+            InfluencerMysqlManager.getInfluencerReport(influencer, res);
+        });
     });
 };
 

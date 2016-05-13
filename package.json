@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "express-session": "^1.13.0",
-    "express-sessions": "^1.0.5"
+    "express-sessions": "^1.0.5",
+    "request": "^2.72.0"
   }
 }
