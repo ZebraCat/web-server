@@ -97,6 +97,21 @@ InfluencerMysqlManager.getInfluencerReport = function(influencers, res) {
     });
 };
 
+InfluencerMysqlManager.getInfluencerMedia = function(user_id, res) {
+    getConnection(function(err, connection) {
+        if(err) {
+            console.log(err);
+        }
+        connection.query('SELECT * FROM media WHERE user_id IN ( ? )', [user_id], function(err, rows, fields) {
+            if(err) {
+                res.status(500).send(err);
+            } else {
+                res.status(200).send(rows);
+            }
+        });
+    });
+};
+
 InfluencerMysqlManager.updateScore = function (klout_score, klout_id, influencer, res) {
     getConnection(function(err, connection) {
         connection.query('UPDATE influencers SET klout_score=?, klout_id=? WHERE user_id=?', [klout_score, klout_id, influencer.user_id], function(err, rows, fields) {
