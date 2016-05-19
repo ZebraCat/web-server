@@ -21,6 +21,4 @@ var pool = mysql.createPool({
     port     : 3306
 });
 
-module.exports = function(cb) {
-    pool.getConnection(cb);
-};
+module.exports = pool;

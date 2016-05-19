@@ -1,16 +1,16 @@
-var getConnection = require('./mysql-connection');
+var pool = require('./mysql-connection');
 
 var UsersMysqlManager = {};
 
 var userExistsQuery = 'SELECT * FROM users WHERE username = ?';
 
 UsersMysqlManager.insertNewUser = function(user, res) {
-    getConnection().query(userExistsQuery, [user.username], function(err, rows, fields) {
+    pool.query(userExistsQuery, [user.username], function(err, rows, fields) {
         if (err) {
             res.status(500).send('Could not register new user!');
         } else {
             if (rows.length === 0) {
-                getConnection().query('INSERT INTO users SET ?', [user], function(err, result) {
+                pool.query('INSERT INTO users SET ?', [user], function(err, result) {
                     if(err) {
                         res.status(500).send('Could not register new user!');
                     } else {
@@ -28,7 +28,7 @@ UsersMysqlManager.insertNewUser = function(user, res) {
 UsersMysqlManager.login = function(user, res) {
     var username = user['username'];
     var password = user['password'];
-    getConnection().query(userExistsQuery + ' AND password = ?', [username], [password], function(err, rows, fields) {
+    pool.query(userExistsQuery + ' AND password = ?', [username], [password], function(err, rows, fields) {
         if(err) {
             res.status(404).send('User name + password not found!');
         } else {
