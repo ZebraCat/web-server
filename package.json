@@ -4,6 +4,7 @@
   "dependencies": {
     "express-session": "^1.13.0",
     "express-sessions": "^1.0.5",
+    "mongoose": "^4.4.17",
     "request": "^2.72.0"
   }
 }
