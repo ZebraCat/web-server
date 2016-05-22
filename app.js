@@ -4,7 +4,7 @@ var http = require('http');
 var express = require('express');
 var winston = require('winston');
 var influencerManager = require('./src/influencer-mysql-manager');
-//var influencerRedisManager = require('./src/influencer-redis-manager');
+var influencerRedisManager = require('./src/influencer-redis-manager');
 var getTimeAnalytics = require('./src/influencer-mongo-manager');
 var usersManager = require('./src/users-mysql-manager');
 
