@@ -16,6 +16,13 @@ var logger = new(winston.Logger)({
 });
 var app = express();
 
+var jwt = require('express-jwt');
+
+var jwtCheck = jwt({
+    secret: new Buffer('zqFw5IjcPD59WQa2uhSxCIek89vak_f52ivBc_45xzoc4wCOY37RlBmmAvWQWXBx', 'base64'),
+    audience: 'OyBgxN0YrFbw3Mk4jFom0grDbPDyVbHz'
+});
+
 var bodyParser = require('body-parser');
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -24,9 +31,12 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, authorization");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
+
+app.use('/api/', jwtCheck);
+
 
 app.get('/', function(req, res) {
     var userQuery = req.query;
@@ -114,9 +124,9 @@ app.get('/media', function(req, res) {
     }
 });
 
-app.post('/newUser', function(req, res) {
+app.post('/new_user', function(req, res) {
     var user = req.body;
-    if (user && user.hasOwnProperty('username') && user.hasOwnProperty('password') && user.hasOwnProperty('email')) {
+    if (user && user.hasOwnProperty('username')) {
         usersManager.insertNewUser(user, res);
     } else {
         res.status(500).send('Bad Request');

@@ -2,6 +2,7 @@
   "name": "web-server",
   "version": "0.0.1",
   "dependencies": {
+    "express-jwt": "^3.4.0",
     "express-session": "^1.13.0",
     "express-sessions": "^1.0.5",
     "mongoose": "^4.4.17",
