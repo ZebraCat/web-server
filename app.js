@@ -35,7 +35,7 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use('/api/', jwtCheck);
+app.use('/', jwtCheck);
 
 
 app.get('/', function(req, res) {
@@ -107,27 +107,15 @@ app.post('/set_new_campaign', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
-    var user = req.body;
-    if (user && user.hasOwnProperty('username') && user.hasOwnProperty('password')) {
-        usersManager.login(user, res);
-    } else {
-        res.status(500).send('Bad Request');
-    }
+    var profile = req.body
+    console.log(profile);
+    usersManager.login(profile, res);
 });
 
 app.get('/media', function(req, res) {
     var user = req.query;
     if(user && user.hasOwnProperty('user_id')) {
         influencerManager.getInfluencerMedia(user['user_id'], res);
-    } else {
-        res.status(500).send('Bad Request');
-    }
-});
-
-app.post('/new_user', function(req, res) {
-    var user = req.body;
-    if (user && user.hasOwnProperty('username')) {
-        usersManager.insertNewUser(user, res);
     } else {
         res.status(500).send('Bad Request');
     }
