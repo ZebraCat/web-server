@@ -99,16 +99,35 @@ app.get('/report_analytics', function(req, res){
 });
 
 app.get('/get_campaigns', function(req, res) {
-    res.status(200).send('');
+    var query = req.query;
+    if (query.hasOwnProperty('profile') && query.profile) {
+        var profile = query.profile;
+        usersManager.getCampaigns(profile, res);
+    } else {
+        res.status(500).send('Bad request');
+    }
 });
 
 app.post('/set_new_campaign', function(req, res) {
     var campaignDetails = req.body;
+    var campaignObject = campaignDetails['campaign'];
+    console.log(campaignObject);
+    if (campaignDetails['profile'] && campaignObject) {
+        campaignObject.user_id = campaignDetails['profile'].user_id;
+        campaignObject.influencer_agreed = 0;
+        campaignObject.influencer_added = 0;
+        campaignObject.est_reach = 0;
+        campaignObject.influencer_target = 10;
+        campaignObject.due_date = new Date(campaignObject.due_date);
+
+        usersManager.setNewCampaign(campaignObject, res);
+    } else {
+        res.status(500).send('bad request (user or campaign no exist)');
+    }
 });
 
 app.post('/login', function(req, res) {
-    var profile = req.body
-    console.log(profile);
+    var profile = req.body;
     usersManager.login(profile, res);
 });
 
