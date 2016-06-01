@@ -126,6 +126,23 @@ app.post('/set_new_campaign', function(req, res) {
     }
 });
 
+app.post('/add_influencer_to_campaign', function(req, res) {
+
+    function returnBadRequest() {
+        res.status(500).send('bad request');
+    }
+
+    var details = req.body;
+    if (details.hasOwnProperty('profile') && details.hasOwnProperty('influencer') && details.hasOwnProperty('campaign')) {
+        var profile = details['profile'];
+        var influencer = details['influencer'];
+        var campaign = details['campaign'];
+        usersManager.addInfluencerToCampaign(profile, influencer, campaign, res);
+    } else {
+        returnBadRequest();
+    }
+});
+
 app.post('/login', function(req, res) {
     var profile = req.body;
     usersManager.login(profile, res);
