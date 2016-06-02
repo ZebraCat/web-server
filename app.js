@@ -72,7 +72,7 @@ app.post('/report', function(req, res) {
     var influencers = req.body;
     if (influencers && influencers.hasOwnProperty('handles') && influencers.handles.length > 0) {
         try {
-            influencerManager.getInfluencerReport(influencers, res);
+            influencerManager.getInfluencerReport(influencers.handles, res);
         }catch(e) {
             logger.log('ERROR', e);
             res.status(500).send('<div><label>Could not get influencers from db</label></div>');
@@ -140,6 +140,16 @@ app.post('/add_influencer_to_campaign', function(req, res) {
         usersManager.addInfluencerToCampaign(profile, influencer, campaign, res);
     } else {
         returnBadRequest();
+    }
+});
+
+app.get('/campaign_influencers', function(req, res) {
+    var details = req.query;
+    console.log(details);
+    if (details.hasOwnProperty('profile') && details.hasOwnProperty('campaign_id')) {
+        usersManager.getCampaignInfluencers(details['campaign_id'], res);
+    } else {
+        res.status(500).send('bad request (no campaign id or bad profile)');
     }
 });
 

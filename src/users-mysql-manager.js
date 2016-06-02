@@ -1,11 +1,14 @@
 var pool = require('./mysql-connection');
+var influencerManager = require('./influencer-mysql-manager');
+
 
 var UsersMysqlManager = {};
 
 var userExistsQuery = 'SELECT * FROM users WHERE user_id = ?';
 var campaignExistsQuery = 'SELECT * FROM campaigns WHERE campaign_name = ?';
 var allCampaignsQuery = 'SELECT * FROM campaigns WHERE user_id = ?';
-var influencerInCampaignQuery = 'SELECT * FROM campaign_influencers WHERE campaign_id = ? AND influencer_id = ?';
+var allInfluencersFromCampaignQuery = 'SELECT * FROM campaign_influencers WHERE campaign_id = ?';
+var influencerInCampaignQuery = allInfluencersFromCampaignQuery + ' AND influencer_id = ?';
 
 UsersMysqlManager.login = function(profile, res) {
     var user = {
@@ -80,7 +83,7 @@ UsersMysqlManager.addInfluencerToCampaign = function(profile, influencer, campai
         campaign_id: campaign_id
     };
 
-    // check that influencer isn't already added to campaign
+    // TODO - check that influencer isn't already added to campaign
     pool.query(influencerInCampaignQuery, [campaign_id, influencer_id], function(err, rows, fields) {
         if(err) {
             console.log(err);
@@ -94,9 +97,9 @@ UsersMysqlManager.addInfluencerToCampaign = function(profile, influencer, campai
                         res.status(500).send('Could not register influencer to campaign!');
                     } else {
                         // increment added count
-                        pool.query('UPDATE campaigns SET influencer_added = influencer_added + 1 WHERE campaign_id = ?', [campaign_id], function(err, results) {
+                        pool.query('UPDATE campaigns SET influencer_added = influencer_added + 1, est_reach = est_reach + ? WHERE campaign_id = ?', [influencer.followers, campaign_id], function(err, results) {
                             if (err) {
-                                // TODO - if this fails, influencer will be added but no incremented, flush two queries after success somehow
+                                // TODO - if this fails, influencer will be added but not incremented, flush two queries after success somehow
                                 console.log(err);
                                 res.status(500).send('Could not increment added Count!')
                             } else {
@@ -107,6 +110,22 @@ UsersMysqlManager.addInfluencerToCampaign = function(profile, influencer, campai
                 });
             } else {
                 res.status(404).send('influencer already registered to campaign!');
+            }
+        }
+    });
+};
+
+UsersMysqlManager.getCampaignInfluencers = function(campaign_id, res) {
+    pool.query(allInfluencersFromCampaignQuery, [campaign_id], function(err, rows, fields) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('Connection or syntax error');
+        } else {
+            if (rows.length > 0) {
+                var influencerIds = rows.map(function (row) {return row.influencer_id});
+                influencerManager.getInfluencerReport(influencerIds, res, 'user_id');
+            } else {
+                res.status(200).send(rows);
             }
         }
     });
