@@ -9,6 +9,9 @@ var campaignExistsQuery = 'SELECT * FROM campaigns WHERE campaign_name = ?';
 var allCampaignsQuery = 'SELECT * FROM campaigns WHERE user_id = ?';
 var allInfluencersFromCampaignQuery = 'SELECT * FROM campaign_influencers WHERE campaign_id = ?';
 var influencerInCampaignQuery = allInfluencersFromCampaignQuery + ' AND influencer_id = ?';
+var removeInfluencerFromCampaignQuery = 'DELETE FROM campaign_influencers WHERE campaign_id = ? AND influencer_id = ?';
+var decrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added - 1, est_reach = est_reach - ? WHERE campaign_id = ?';
+var incrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added + 1, est_reach = est_reach + ? WHERE campaign_id = ?';
 
 UsersMysqlManager.login = function(profile, res) {
     var user = {
@@ -97,7 +100,7 @@ UsersMysqlManager.addInfluencerToCampaign = function(profile, influencer, campai
                         res.status(500).send('Could not register influencer to campaign!');
                     } else {
                         // increment added count
-                        pool.query('UPDATE campaigns SET influencer_added = influencer_added + 1, est_reach = est_reach + ? WHERE campaign_id = ?', [influencer.followers, campaign_id], function(err, results) {
+                        pool.query(incrementInfluencerQuery, [influencer.followers, campaign_id], function(err, results) {
                             if (err) {
                                 // TODO - if this fails, influencer will be added but not incremented, flush two queries after success somehow
                                 console.log(err);
@@ -129,6 +132,41 @@ UsersMysqlManager.getCampaignInfluencers = function(campaign_id, res) {
             }
         }
     });
+};
+
+UsersMysqlManager.removeCampaignInfluencer = function(campaign_id, influencer, res) {
+
+    pool.query(influencerInCampaignQuery, [campaign_id, influencer.user_id], function(err, rows, fields) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('Connection or syntax error');
+        } else {
+            if (rows.length > 0 && rows[0].hasOwnProperty('hired') && rows[0].hired) {
+                res.stats(403).send('Cannot remove hired influencer from campaign!');
+            } else if (rows.length == 0) {
+                res.status(404).send('Influencer not found in campaign!');
+            } else {
+                // delete actual influencer from campaign
+                pool.query(removeInfluencerFromCampaignQuery, [campaign_id, influencer.user_id], function(err, results) {
+                    if (err) {
+                        console.log(err);
+                        res.status(500).send('Error deleting the influencer from the campaign!');
+                    } else {
+                        // need to decrement added influencers and reach from campaigns table
+                        pool.query(decrementInfluencerQuery, [influencer.followers, campaign_id], function (err, results) {
+                            // TODO - if this fails, influencer will not be decremented but other tables will be updated. either flush or retry
+                            if (err) {
+                                console.log(err);
+                                res.status(500).send('Error updating campaign details after deleting influencer! (fatal)');
+                            } else {
+                                res.status(200).send('Deleted influencer successfully from campaign!');
+                            }
+                        });
+                    }
+                })
+            }
+        }
+    })
 };
 
 module.exports = UsersMysqlManager;

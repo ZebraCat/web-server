@@ -153,6 +153,16 @@ app.get('/campaign_influencers', function(req, res) {
     }
 });
 
+app.post('/remove_campaign_influencer', function(req, res) {
+    var details = req.body;
+    console.log(details);
+    if (details.hasOwnProperty('profile') && details.hasOwnProperty('campaign_id') && details.hasOwnProperty('influencer')) {
+        usersManager.removeCampaignInfluencer(details.campaign_id, details.influencer, res);
+    } else {
+        res.status(500).send('bad request (no campaign id or bad profile)');
+    }
+});
+
 app.post('/login', function(req, res) {
     var profile = req.body;
     usersManager.login(profile, res);
