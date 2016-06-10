@@ -108,4 +108,38 @@ InfluencerMysqlManager.connectionErrorResponse = function (res, e) {
     res.status(500).send('Could not connect to database!');
 };
 
+InfluencerMysqlManager.getAvailableFasionTypes = function(res) {
+    pool.query('DESCRIBE influencers fash_type', function(err, rows, fields) {
+        if (err) {
+            res.status(500).send('Could not retrieve fashion types');
+        } else {
+            res.status(200).send(rows);
+        }
+    })
+};
+
+InfluencerMysqlManager.updateFashionTypes = function (user_id, types, res) {
+    var refinedTypes = "('" + types.join() + "')";
+    pool.query('UPDATE influencers SET fash_type = ' + refinedTypes +  ' WHERE user_id = ?;', [user_id] , function(err, result) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('could not update types');
+        } else {
+            res.status(200).send('Updated Types!');
+        }
+    })
+};
+
+InfluencerMysqlManager.getInfluencerFashionTypes = function (user_id, res) {
+    pool.query('SELECT fash_type FROM influencers WHERE user_id = ?', [user_id], function(err, rows, fields) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('could not get influencer types');
+        } else {
+            res.status(200).send(rows);
+        }
+    })
+};
+
+
 module.exports = InfluencerMysqlManager;

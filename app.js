@@ -177,4 +177,23 @@ app.get('/media', function(req, res) {
     }
 });
 
+// FASHION TYPES
+
+app.get('/fashion_types', function(req, res) {
+    influencerManager.getAvailableFasionTypes(res);
+});
+
+app.post('/update_fashion_types', function(req, res) {
+    var details = req.body;
+    if (details && details.hasOwnProperty('user_id') && details.hasOwnProperty('types')) {
+        influencerManager.updateFashionTypes(details['user_id'], details['types'], res);
+    } else {
+        res.status(500).send('bad request');
+    }
+});
+
+app.get('/influencer_fashion_types', function(req, res) {
+    influencerManager.getInfluencerFashionTypes(req.query['user_id'], res)
+});
+
 app.listen(3000);
