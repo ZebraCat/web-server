@@ -16,6 +16,7 @@ InfluencerMysqlManager.makeQueryString = function(userQuery) {
         queryString += this.queryStringIfExists(userQuery, 'a', 'avg_likes', '>', 'likesAbove');
         queryString += this.queryStringIfExists(userQuery, 'a', 'username', '=', 'username', function(username){return ("'" + username + "'")});
         queryString += this.queryStringIfExists(userQuery, 'a', 'country', '=', 'country', function(country){return ("'" + country + "'")});
+        queryString += this.addFashTypeIfExists(userQuery);
         queryString += this.queryStringIfExists(userQuery, 'b', 'year_of_birth', '>=', 'toAge', function(year) {return (currentYear - parseInt(year)).toString()});
         queryString += this.queryStringIfExists(userQuery, 'b', 'year_of_birth', '<=', 'fromAge', function(year) {return (currentYear - parseInt(year)).toString()});
     }
@@ -30,6 +31,18 @@ InfluencerMysqlManager.queryStringIfExists = function(userQuery, tableName, tabl
     return '';
 };
 
+InfluencerMysqlManager.addFashTypeIfExists = function(userQuery) {
+    var query = '';
+    if (this.containsField(userQuery, 'fash_type')) {
+        var fashTypes = userQuery['fash_type'];
+        if (typeof fashTypes === 'string') {
+            fashTypes = new Array(fashTypes);
+        }
+        query = ' AND ' + fashTypes.map(function(type) {return " FIND_IN_SET('" + type + "',fash_type)";}).join(" OR");
+    }
+    return query;
+};
+
 InfluencerMysqlManager.containsField = function (userQuery, field) {
     return typeof userQuery[field] !== 'undefined' && userQuery[field];
 };
@@ -39,13 +52,14 @@ InfluencerMysqlManager.getInfluencers = function (userQuery, pageNum, res) {
     var queryString = this.makeQueryString(userQuery);
     var limitString =' LIMIT ' + ((pageNum - 1) * PAGE_SIZE).toString() + ',' + (PAGE_SIZE).toString();
     var tableString = 'SELECT * FROM influencers as a ';
+    var sortByString = ' ORDER BY followers DESC';
     if (this.containsField(userQuery, 'toAge') || this.containsField(userQuery, 'fromAge')) {
         tableString += ',influencers_manual as b WHERE true AND a.username = b.username';
     }else {
         tableString += 'WHERE true';
     }
 
-    pool.query(tableString + queryString + limitString + ';', function (err, rows, fields) {
+    pool.query(tableString + queryString + sortByString + limitString + ';', function (err, rows, fields) {
         if (!err) {
             res.send(rows);
         } else {
