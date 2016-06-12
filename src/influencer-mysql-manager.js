@@ -16,6 +16,8 @@ InfluencerMysqlManager.makeQueryString = function(userQuery) {
         queryString += this.queryStringIfExists(userQuery, 'a', 'avg_likes', '>', 'likesAbove');
         queryString += this.queryStringIfExists(userQuery, 'a', 'username', '=', 'username', function(username){return ("'" + username + "'")});
         queryString += this.queryStringIfExists(userQuery, 'a', 'country', '=', 'country', function(country){return ("'" + country + "'")});
+        queryString += this.queryStringIfExists(userQuery, 'a', 'est_price', '>=', 'priceMin');
+        queryString += this.queryStringIfExists(userQuery, 'a', 'est_price', '<=', 'priceMax');
         queryString += this.addFashTypeIfExists(userQuery);
         queryString += this.queryStringIfExists(userQuery, 'b', 'year_of_birth', '>=', 'toAge', function(year) {return (currentYear - parseInt(year)).toString()});
         queryString += this.queryStringIfExists(userQuery, 'b', 'year_of_birth', '<=', 'fromAge', function(year) {return (currentYear - parseInt(year)).toString()});
