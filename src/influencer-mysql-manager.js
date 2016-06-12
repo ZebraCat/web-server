@@ -40,7 +40,7 @@ InfluencerMysqlManager.addFashTypeIfExists = function(userQuery) {
         if (typeof fashTypes === 'string') {
             fashTypes = new Array(fashTypes);
         }
-        query = ' AND ' + fashTypes.map(function(type) {return " FIND_IN_SET('" + type + "',fash_type)";}).join(" OR");
+        query = ' AND (' + fashTypes.map(function(type) {return " FIND_IN_SET('" + type + "',fash_type)";}).join(" OR") + ')';
     }
     return query;
 };
