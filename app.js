@@ -128,16 +128,23 @@ app.post('/set_new_campaign', function(req, res) {
 
 app.post('/add_influencer_to_campaign', function(req, res) {
 
-    function returnBadRequest() {
-        res.status(500).send('bad request');
-    }
-
     var details = req.body;
     if (details.hasOwnProperty('profile') && details.hasOwnProperty('influencer') && details.hasOwnProperty('campaign')) {
         var profile = details['profile'];
         var influencer = details['influencer'];
         var campaign = details['campaign'];
         usersManager.addInfluencerToCampaign(profile, influencer, campaign, res);
+    } else {
+        returnBadRequest();
+    }
+});
+
+app.post('influencer_accepted', function(req, res) {
+    var details = req.body;
+    var campaignId = details['campaign_id'];
+    var influencer = details['profile'];
+    if (influencer && campaignId && influencer.hasOwnProperty('identities') && influencer.identities[0].isSocial) {
+        usersManager.changeInfluencerState(influencer.identities[0].user_id, campaignId, usersManager.INFLUENCER_HIRED, res);
     } else {
         returnBadRequest();
     }
@@ -150,6 +157,16 @@ app.get('/campaign_influencers', function(req, res) {
         usersManager.getCampaignInfluencers(details['campaign_id'], res);
     } else {
         res.status(500).send('bad request (no campaign id or bad profile)');
+    }
+});
+
+app.get('/influencer_campaigns', function(req, res) {
+    var details = req.query;
+    console.log(details);
+    if (details.hasOwnProperty('profile')) {
+        res.status(200).send([]);
+    } else {
+        res.status(500).send('un-authorized');
     }
 });
 
@@ -195,5 +212,9 @@ app.post('/update_fashion_types', function(req, res) {
 app.get('/influencer_fashion_types', function(req, res) {
     influencerManager.getInfluencerFashionTypes(req.query['user_id'], res)
 });
+
+function returnBadRequest() {
+    res.status(500).send('bad request');
+}
 
 app.listen(3000);

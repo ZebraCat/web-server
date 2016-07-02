@@ -4,14 +4,24 @@ var influencerManager = require('./influencer-mysql-manager');
 
 var UsersMysqlManager = {};
 
+UsersMysqlManager.INFLUENCER_HIRED = 1;
+UsersMysqlManager.INFLUENCER_PENDING = 0;
+UsersMysqlManager.INFLUENCER_DECLINED = 2;
+
+var INFLUENCER_HIRED = 1;
+var INFLUENCER_PENDING = 0;
+var INFLUENCER_DECLINED = 2;
+
 var userExistsQuery = 'SELECT * FROM users WHERE user_id = ?';
 var campaignExistsQuery = 'SELECT * FROM campaigns WHERE campaign_name = ?';
 var allCampaignsQuery = 'SELECT * FROM campaigns WHERE user_id = ?';
 var allInfluencersFromCampaignQuery = 'SELECT * FROM campaign_influencers WHERE campaign_id = ?';
 var influencerInCampaignQuery = allInfluencersFromCampaignQuery + ' AND influencer_id = ?';
+var allInfluencerCampaignsQuery = 'SELECT * FROM campaign_influencers WHERE influencer_id = ?';
 var removeInfluencerFromCampaignQuery = 'DELETE FROM campaign_influencers WHERE campaign_id = ? AND influencer_id = ?';
 var decrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added - 1, est_reach = est_reach - ? WHERE campaign_id = ?';
 var incrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added + 1, est_reach = est_reach + ? WHERE campaign_id = ?';
+var changeInfluencerStateQuery = 'UPDATE campaign_influencers SET influencer_state = ? WHERE campaign_id = ? AND influencer_id = ?';
 
 UsersMysqlManager.login = function(profile, res) {
     var user = {
@@ -141,7 +151,7 @@ UsersMysqlManager.removeCampaignInfluencer = function(campaign_id, influencer, r
             console.log(err);
             res.status(500).send('Connection or syntax error');
         } else {
-            if (rows.length > 0 && rows[0].hasOwnProperty('hired') && rows[0].hired) {
+            if (rows.length > 0 && rows[0].hasOwnProperty('influencer_state') && rows[0].influencer_state === INFLUENCER_HIRED) {
                 res.stats(403).send('Cannot remove hired influencer from campaign!');
             } else if (rows.length == 0) {
                 res.status(404).send('Influencer not found in campaign!');
@@ -167,6 +177,35 @@ UsersMysqlManager.removeCampaignInfluencer = function(campaign_id, influencer, r
             }
         }
     })
+};
+
+UsersMysqlManager.getInfluencerCamapgins = function(influencer, res) {
+
+    pool.query(allInfluencerCampaignsQuery, [influencer.user_id], function(err, rows, fields) {
+        if(err) {
+            console.log(err);
+            res.status(500).send('Connection or syntax error');
+        } else {
+            res.status(200).send(rows);
+        }
+    });
+};
+
+// TODO - validate state change, pending -> decline || accepted, and that's it!
+UsersMysqlManager.changeInfluencerState = function(influencerId, campaignId, state, res) {
+
+    if (state < 0 || state > 2) {
+        res.status(500).send('Illegal state');
+    }
+
+    pool.query(changeInfluencerStateQuery, [state, campaignId, influencerId], function(err, results) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('Error updating influencer state!');
+        } else {
+            res.status(200).send('Changed influencer state to ' + state);
+        }
+    });
 };
 
 module.exports = UsersMysqlManager;
