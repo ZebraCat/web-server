@@ -10,14 +10,18 @@ var klout_user_to_score_url = 'http://api.klout.com/v2/user.json/';
 var KloutScoreManager = {};
 
 KloutScoreManager.getKloutIdFromUser = function(user, callback, errCallback) {
-    var url = instagram_id_to_klout_id_url + user['user_id'] + "?key=" + klout_api_key;
-    request(url, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            callback(body, user);
-        } else {
-            errCallback(error);
-        }
-    });
+    if (user && user.hasOwnProperty('user_id')) {
+        var url = instagram_id_to_klout_id_url + user['user_id'] + "?key=" + klout_api_key;
+        request(url, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                callback(body, user);
+            } else {
+                errCallback(error);
+            }
+        });
+    } else {
+        errCallback('error, bad user');
+    }
 };
 
 KloutScoreManager.getKloutScore = function(user, rows, res, callback) {

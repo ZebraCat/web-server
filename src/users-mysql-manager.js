@@ -18,10 +18,15 @@ var allCampaignsQuery = 'SELECT * FROM campaigns WHERE user_id = ?';
 var allInfluencersFromCampaignQuery = 'SELECT * FROM campaign_influencers WHERE campaign_id = ?';
 var influencerInCampaignQuery = allInfluencersFromCampaignQuery + ' AND influencer_id = ?';
 var allInfluencerCampaignsQuery = 'SELECT * FROM campaign_influencers WHERE influencer_id = ?';
+var allInfluencerPendingProposalsQuery = 'SELECT b.* FROM campaign_influencers as a JOIN proposals as b ' +
+                                         'ON a.influencer_id = b.influencer_id WHERE a.influencer_id = ? AND ' +
+                                         'influencer_state =' + INFLUENCER_PENDING;
 var removeInfluencerFromCampaignQuery = 'DELETE FROM campaign_influencers WHERE campaign_id = ? AND influencer_id = ?';
 var decrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added - 1, est_reach = est_reach - ? WHERE campaign_id = ?';
 var incrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added + 1, est_reach = est_reach + ? WHERE campaign_id = ?';
 var changeInfluencerStateQuery = 'UPDATE campaign_influencers SET influencer_state = ? WHERE campaign_id = ? AND influencer_id = ?';
+var addInfluencerProposal = 'INSERT INTO proposals SET ?';
+var influencerProposalNotExistsQuery = 'SELECT * FROM proposals WHERE brand_id =? AND influencer_id = ? AND campaign_id = ?';
 
 UsersMysqlManager.login = function(profile, res) {
     var user = {
@@ -204,6 +209,40 @@ UsersMysqlManager.changeInfluencerState = function(influencerId, campaignId, sta
             res.status(500).send('Error updating influencer state!');
         } else {
             res.status(200).send('Changed influencer state to ' + state);
+        }
+    });
+};
+
+UsersMysqlManager.addInfluencerProposal = function(proposal, res) {
+
+    proposal.due_date = new Date(proposal.due_date);
+    pool.query(influencerProposalNotExistsQuery, [proposal['brand_id'], proposal['influencer_id'], proposal['campaign_id']], function(err, rows, fields) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('Error posting proposal');
+        } else if (rows.length > 0) {
+            res.status(403).send('Already proposed to influencer in this campaign!');
+        } else {
+            pool.query(addInfluencerProposal, proposal, function(err, results) {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send('Error posting proposal');
+                } else {
+                    res.status(200).send('Added influencer proposal!');
+                }
+            });
+        }
+    });
+};
+
+UsersMysqlManager.getInfluencerProposals = function(influencer_id, res) {
+    pool.query(allInfluencerPendingProposalsQuery, [influencer_id], function(err, rows, fields) {
+        if (err) {
+            console.log(err);
+            res.status(500).send('Error getting proposals');
+        } else {
+            // TODO - need to get brand info (website and brand_image) so: add these to proposals and in insert proposal, set them for each row.
+            res.status(200).send(rows);
         }
     });
 };
