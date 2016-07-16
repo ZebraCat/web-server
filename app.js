@@ -135,18 +135,19 @@ app.post('/add_influencer_to_campaign', function(req, res) {
         var campaign = details['campaign'];
         usersManager.addInfluencerToCampaign(profile, influencer, campaign, res);
     } else {
-        returnBadRequest();
+        returnBadRequest(res);
     }
 });
 
-app.post('influencer_accepted', function(req, res) {
+app.post('/proposal_response', function(req, res) {
     var details = req.body;
-    var campaignId = details['campaign_id'];
+    var campaignId = details['proposal']['campaign_id'];
     var profile = details['profile'];
-    if (campaignId && isSocialProfile(profile)) {
-        usersManager.changeInfluencerState(getSocialUserId(profile), campaignId, usersManager.INFLUENCER_HIRED, res);
+    var response = details['response'];
+    if (campaignId && isSocialProfile(profile) && (response === usersManager.INFLUENCER_HIRED || response === usersManager.INFLUENCER_DECLINED)) {
+        usersManager.changeInfluencerState(getSocialUserId(profile), campaignId, response, res);
     } else {
-        returnBadRequest();
+        returnBadRequest(res);
     }
 });
 
@@ -232,7 +233,7 @@ app.get('/influencer_fashion_types', function(req, res) {
     influencerManager.getInfluencerFashionTypes(req.query['user_id'], res)
 });
 
-function returnBadRequest() {
+function returnBadRequest(res) {
     res.status(500).send('bad request');
 }
 

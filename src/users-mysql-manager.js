@@ -18,15 +18,16 @@ var allCampaignsQuery = 'SELECT * FROM campaigns WHERE user_id = ?';
 var allInfluencersFromCampaignQuery = 'SELECT * FROM campaign_influencers WHERE campaign_id = ?';
 var influencerInCampaignQuery = allInfluencersFromCampaignQuery + ' AND influencer_id = ?';
 var allInfluencerCampaignsQuery = 'SELECT * FROM campaign_influencers WHERE influencer_id = ?';
-var allInfluencerPendingProposalsQuery = 'SELECT b.* FROM campaign_influencers as a JOIN proposals as b ' +
-                                         'ON a.influencer_id = b.influencer_id WHERE a.influencer_id = ? AND ' +
-                                         'influencer_state =' + INFLUENCER_PENDING;
+var allInfluencerProposalsQuery = 'SELECT b.*, a.influencer_state FROM campaign_influencers as a JOIN proposals as b ' +
+                                         'ON a.influencer_id = b.influencer_id WHERE a.influencer_id = ?';
 var removeInfluencerFromCampaignQuery = 'DELETE FROM campaign_influencers WHERE campaign_id = ? AND influencer_id = ?';
 var decrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added - 1, est_reach = est_reach - ? WHERE campaign_id = ?';
 var incrementInfluencerQuery = 'UPDATE campaigns SET influencer_added = influencer_added + 1, est_reach = est_reach + ? WHERE campaign_id = ?';
+var incrementHiredInfluencerQuery = 'UPDATE campaigns SET influencer_agreed = influencer_agreed + 1 WHERE campaign_id = ?';
 var changeInfluencerStateQuery = 'UPDATE campaign_influencers SET influencer_state = ? WHERE campaign_id = ? AND influencer_id = ?';
 var addInfluencerProposal = 'INSERT INTO proposals SET ?';
 var influencerProposalNotExistsQuery = 'SELECT * FROM proposals WHERE brand_id =? AND influencer_id = ? AND campaign_id = ?';
+var verifyProposalPendingState = allInfluencerCampaignsQuery + ' AND campaign_id = ? AND influencer_state = ' + INFLUENCER_PENDING;
 
 UsersMysqlManager.login = function(profile, res) {
     var user = {
@@ -196,19 +197,36 @@ UsersMysqlManager.getInfluencerCamapgins = function(influencer, res) {
     });
 };
 
-// TODO - validate state change, pending -> decline || accepted, and that's it!
 UsersMysqlManager.changeInfluencerState = function(influencerId, campaignId, state, res) {
 
     if (state < 0 || state > 2) {
         res.status(500).send('Illegal state');
     }
 
-    pool.query(changeInfluencerStateQuery, [state, campaignId, influencerId], function(err, results) {
-        if (err) {
-            console.log(err);
-            res.status(500).send('Error updating influencer state!');
+    pool.query(verifyProposalPendingState, [influencerId, campaignId], function(err, rows, fields) {
+        if (rows.length === 0) {
+            res.status(400).send('Cannot change influencer state');
         } else {
-            res.status(200).send('Changed influencer state to ' + state);
+            pool.query(changeInfluencerStateQuery, [state, campaignId, influencerId], function(err, results) {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send('Error updating influencer state!');
+                } else {
+                    if (state === INFLUENCER_HIRED) {
+                        // TODO - if this fails, not good.. should change campaign and proposal state together
+                        pool.query(incrementHiredInfluencerQuery, [campaignId], function(err, results) {
+                            if (err) {
+                                console.log(err);
+                                res.status(500).send('Error updating Hired state on campaign');
+                            } else {
+                                res.status(200).send('Changed influencer state to ' + state);
+                            }
+                        })
+                    } else {
+                        res.status(200).send('Changed influencer state to ' + state);
+                    }
+                }
+            });
         }
     });
 };
@@ -236,7 +254,7 @@ UsersMysqlManager.addInfluencerProposal = function(proposal, res) {
 };
 
 UsersMysqlManager.getInfluencerProposals = function(influencer_id, res) {
-    pool.query(allInfluencerPendingProposalsQuery, [influencer_id], function(err, rows, fields) {
+    pool.query(allInfluencerProposalsQuery, [influencer_id], function(err, rows, fields) {
         if (err) {
             console.log(err);
             res.status(500).send('Error getting proposals');
